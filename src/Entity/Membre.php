@@ -4,6 +4,9 @@ namespace App\Entity;
 
 use App\Repository\MembreRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+
 
 #[ORM\Entity(repositoryClass: MembreRepository::class)]
 class Membre
@@ -23,7 +26,10 @@ class Membre
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $passwordHash = null;
+    private ?string $password = null;
+
+    #[ORM\Column]
+    private array $roles = [];
 
     public function getId(): ?int
     {
@@ -66,19 +72,35 @@ class Membre
         return $this;
     }
 
-    public function getPasswordHash(): ?string
+    public function getPassword(): ?string
     {
-        return $this->passwordHash;
+        return $this->password;
     }
 
-    public function setPasswordHash(string $hash): static
+    public function setPassword(string $password): static
     {
-        $this->passwordHash = $hash;
+        $this->password = $password;
         return $this;
     }
 
     public function getFullName(): string
     {
         return $this->name . ' ' . $this->lastName;
+    }
+
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+
+        // rôle minimum garanti
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+    public function setRoles(array $roles): static
+    {
+        $this->roles = $roles;
+
+        return $this;
     }
 }
