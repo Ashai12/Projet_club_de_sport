@@ -23,7 +23,7 @@ class Membre
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $password = null;
+    private ?string $passwordHash = null;
 
     public function getId(): ?int
     {
@@ -66,15 +66,19 @@ class Membre
         return $this;
     }
 
-    public function getPassword(): ?string
+    public function getPasswordHash(): ?string
     {
-        return $this->password;
+        return $this->passwordHash;
     }
 
-    public function setPassword(string $password): static
+    public function setPasswordHash(string $hash): static
     {
-        $this->password = $password;
-
+        $this->passwordHash = $hash;
         return $this;
+    }
+
+    public function getFullName(): string
+    {
+        return $this->name . ' ' . $this->lastName;
     }
 }
