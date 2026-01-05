@@ -63,7 +63,7 @@ class MembreController extends AbstractController
         $user->setPassword($hashedPassword);
         $user->setRoles($data['roles'] ?? ['ROLE_USER']);
 
-        // Enregistrement en bd
+        // Enregistrement en db
         $em->persist($user);
         $em->flush();
 
