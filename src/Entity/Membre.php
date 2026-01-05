@@ -9,7 +9,7 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 
 #[ORM\Entity(repositoryClass: MembreRepository::class)]
-class Membre
+class Membre implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -28,8 +28,9 @@ class Membre
     #[ORM\Column(length: 255)]
     private ?string $password = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'json')]
     private array $roles = [];
+
 
     public function getId(): ?int
     {
@@ -60,10 +61,11 @@ class Membre
         return $this;
     }
 
-    public function getEmail(): ?string
+    public function getUserIdentifier(): string
     {
         return $this->email;
     }
+
 
     public function setEmail(string $email): static
     {
@@ -103,4 +105,6 @@ class Membre
 
         return $this;
     }
+
+    public function eraseCredentials(): void {}
 }
