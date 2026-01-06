@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-
+use Symfony\Component\VarDumper\Cloner\Data;
 
 class MembreController extends AbstractController
 {
@@ -68,5 +68,36 @@ class MembreController extends AbstractController
         $em->flush();
 
         return new JsonResponse(['status' => 'User Created'], JsonResponse::HTTP_CREATED);
+    }
+
+    #[Route('/api/membres/{id}', methods: ['PATCH'])]
+    public function update(Request $request, Membre $user, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (isset($data['firstName'])) {
+            $user->setName($data['firstName']);
+        }
+
+        if (isset($data['lastName'])) {
+            $user->setLastName($data['lastName']);
+        }
+
+        if (isset($data['email'])) {
+            $user->setEmail($data['email']);
+        }
+
+        if (isset($data['password'])) {
+            $hashedPassword = $passwordHasher->hashPassword(
+            $user,
+            $data['password']
+        );
+            $user->setPassword($hashedPassword);
+        }
+
+        // Sauvegarde des modifications
+        $em->flush();
+
+        return new JsonResponse(['status' => 'User updated'], JsonResponse::HTTP_OK);
     }
 }
