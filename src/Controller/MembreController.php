@@ -10,7 +10,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\VarDumper\Cloner\Data;
 
 class MembreController extends AbstractController
 {
@@ -99,5 +98,14 @@ class MembreController extends AbstractController
         $em->flush();
 
         return new JsonResponse(['status' => 'User updated'], JsonResponse::HTTP_OK);
+    }
+
+    #[Route('/api/membres/{id}', methods: ['DELETE'])]
+    public function delete(Membre $user, EntityManagerInterface $em): JsonResponse
+    {
+        $em->remove($user);
+        $em->flush();
+
+        return new JsonResponse(['status' => 'User deleted'], JsonResponse::HTTP_OK);
     }
 }
