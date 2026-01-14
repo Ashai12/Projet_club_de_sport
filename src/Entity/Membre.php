@@ -4,11 +4,16 @@ namespace App\Entity;
 
 use App\Repository\MembreRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+
+
 
 
 #[ORM\Entity(repositoryClass: MembreRepository::class)]
+#[UniqueEntity('email')] // Vérification avant l'envoi en BD
 class Membre implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -17,15 +22,55 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: 'le champ {{ label }} doit etre rempli.')]
+    #[Assert\Length(
+        min: 2,
+        max: 60,
+        minMessage: 'Au minimum {{ min }} lettres sont attendus.',
+        maxMessage: 'Au maximum {{ max }} lettres sont attendus.',
+    )]
+    #[Assert\NoSuspiciousCharacters]
+    #[Assert\Regex(
+        pattern: '/^[a-zA-ZÀ-ÿ\- ]+$/',
+        message: 'Le prénom ne doit contenir que des lettres.'
+    )]
     private ?string $name = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: 'le champ {{ label }} doit etre rempli')]
+    #[Assert\Length(
+        min: 2,
+        max: 60,
+        minMessage: 'Au minimum {{ min }} lettres sont attendus.',
+        maxMessage: 'Au maximum {{ max }} lettres sont attendus.',
+    )]
+    #[Assert\NoSuspiciousCharacters]
+    #[Assert\Regex(
+        pattern: '/^[a-zA-ZÀ-ÿ\- ]+$/',
+        message: 'Le nom ne doit contenir que des lettres.'
+    )]
     private ?string $lastName = null;
 
     #[ORM\Column(length: 255, unique: true)]
+    #[Assert\NotBlank(message: 'le champ {{ label }} doit etre rempli')]
+    #[Assert\Email(
+        message: "L'email {{ value }} n'est pas un email valide.",
+        normalizer: 'trim'
+    )]
+    #[Assert\NoSuspiciousCharacters]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'le champ {{ label }} doit etre rempli')]
+    #[Assert\PasswordStrength(
+        minScore: 3,
+        message: 'le mot de passe est trop faible'
+    )]
+    #[Assert\NoSuspiciousCharacters]
+    #[Assert\NotCompromisedPassword(
+        message: "Ce mot de passe a été divulgué, s'il vous plait choisissez en un autre.",
+        skipOnError: true
+    )]
     private ?string $password = null;
 
     #[ORM\Column(type: 'json')]
@@ -106,5 +151,5 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function eraseCredentials(): void {}
+    public function eraseCredentials(): void {} 
 }
