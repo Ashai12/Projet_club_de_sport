@@ -10,9 +10,13 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+
 
 class MembreController extends AbstractController
 {
+    #[IsGranted('ROLE_USER')]
     #[Route('/api/membres', methods: ['GET'])]
     public function index(MembreRepository $membreRepository): JsonResponse
     {
@@ -31,6 +35,7 @@ class MembreController extends AbstractController
         return new JsonResponse($data, JsonResponse::HTTP_OK);
     }
 
+    #[IsGranted('ROLE_USER')]
     #[Route('/api/membres/{id}', methods: ['GET'])]
     public function show(Membre $membre): JsonResponse
     {
@@ -44,23 +49,41 @@ class MembreController extends AbstractController
             return new JsonResponse($data, JsonResponse::HTTP_OK);
     }
 
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/api/membres', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher): JsonResponse
+    public function create(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, ValidatorInterface $validator): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
         $user = new Membre;
 
-        $hashedPassword = $passwordHasher->hashPassword(
-            $user,
-            $data['password']
-        );
-
         $user->setName($data['firstName']);
         $user->setLastName($data['lastName']);
         $user->setEmail($data['email']);
+        $user->setPlainPassword($data['password']);
+        $user->setRoles(['ROLE_USER']);
+
+        $errors = $validator->validate($user);
+
+        if (count($errors) > 0) {
+            $messages = [];
+
+            foreach ($errors as $error) {
+                $messages[$error->getPropertyPath()][] = $error->getMessage();
+            }
+
+            return new JsonResponse([
+                'errors' => $messages
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $hashedPassword = $passwordHasher->hashPassword(
+            $user,
+            $user->getPlainPassword()
+        );
+
         $user->setPassword($hashedPassword);
-        $user->setRoles($data['roles'] ?? ['ROLE_USER']);
+        $user->setPlainPassword(null);
 
         // Enregistrement en db
         $em->persist($user);

@@ -73,6 +73,16 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
     )]
     private ?string $password = null;
 
+    #[Assert\NotBlank]
+    #[Assert\PasswordStrength(
+        minScore: 3,
+        message: 'Le mot de passe est trop faible'
+    )]
+    #[Assert\NotCompromisedPassword(
+        message: "Ce mot de passe a été divulgué."
+    )]
+    private ?string $plainPassword = null;
+
     #[ORM\Column(type: 'json')]
     private array $roles = [];
 
@@ -151,5 +161,17 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function eraseCredentials(): void {} 
+    public function getPlainPassword(): ?string
+    {
+        return $this->plainPassword;
+    }
+
+    public function setPlainPassword(?string $plainPassword): self
+    {
+        $this->plainPassword = $plainPassword;
+        return $this;
+    }
+
+
+    public function eraseCredentials(): void {}
 }
