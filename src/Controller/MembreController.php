@@ -89,17 +89,20 @@ class MembreController extends AbstractController
         $em->persist($user);
         $em->flush();
 
-        return new JsonResponse(['status' => 'User Created'], JsonResponse::HTTP_CREATED);
+        return new JsonResponse(['status' => 'Utilisateur créé'], JsonResponse::HTTP_CREATED);
     }
 
     #[IsGranted('ROLE_USER')]
     #[Route('/api/membres/{id}', methods: ['PATCH'])]
     public function update(Request $request, Membre $user, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, ValidatorInterface $validator): JsonResponse
     {
-        // Vérifier que l'utilisateur ne peut modifier que son propre profil
         $currentUser = $this->getUser();
-        if (!$currentUser || !($currentUser instanceof Membre) || $user->getId() !== $currentUser->getId()) {
-            throw $this->createAccessDeniedException('You cannot modify this profile');
+        // Vérification si ADMIN si oui on passe au remove flush
+        if (!in_array('ROLE_ADMIN', $currentUser->getRoles())) {
+            // Vérification si c'est son propre profil
+            if (!$currentUser || !($currentUser instanceof Membre) || $user->getId() !== $currentUser->getId()) {
+                throw $this->createAccessDeniedException('Tu ne peux pas modifier ce profil');
+            }
         }
 
         $data = json_decode($request->getContent(), true);
@@ -141,15 +144,26 @@ class MembreController extends AbstractController
         // Sauvegarde des modifications
         $em->flush();
 
-        return new JsonResponse(['status' => 'User updated'], JsonResponse::HTTP_OK);
+        return new JsonResponse(['status' => 'Utilisateur modifié'], JsonResponse::HTTP_OK);
     }
 
+    #[IsGranted(['ROLE_ADMIN', 'ROLE_USER'])]
     #[Route('/api/membres/{id}', methods: ['DELETE'])]
     public function delete(Membre $user, EntityManagerInterface $em): JsonResponse
     {
+
+        $currentUser = $this->getUser();
+        // Vérification si ADMIN si oui on passe au remove flush
+        if (!in_array('ROLE_ADMIN', $currentUser->getRoles())) {
+            // Vérification si c'est son propre profil
+            if (!$currentUser || !($currentUser instanceof Membre) || $user->getId() !== $currentUser->getId()) {
+                throw $this->createAccessDeniedException('Tu ne peux pas supprimer ce profil');
+            }
+        }
+
         $em->remove($user);
         $em->flush();
 
-        return new JsonResponse(['status' => 'User deleted'], JsonResponse::HTTP_OK);
+        return new JsonResponse(['status' => 'Utilisateur supprimé'], JsonResponse::HTTP_OK);
     }
 }
