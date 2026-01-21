@@ -92,9 +92,16 @@ class MembreController extends AbstractController
         return new JsonResponse(['status' => 'User Created'], JsonResponse::HTTP_CREATED);
     }
 
+    #[IsGranted('ROLE_USER')]
     #[Route('/api/membres/{id}', methods: ['PATCH'])]
-    public function update(Request $request, Membre $user, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher): JsonResponse
+    public function update(Request $request, Membre $user, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, ValidatorInterface $validator): JsonResponse
     {
+        // Vérifier que l'utilisateur ne peut modifier que son propre profil
+        $currentUser = $this->getUser();
+        if (!$currentUser || !($currentUser instanceof Membre) || $user->getId() !== $currentUser->getId()) {
+            throw $this->createAccessDeniedException('You cannot modify this profile');
+        }
+
         $data = json_decode($request->getContent(), true);
 
         if (isset($data['firstName'])) {
@@ -111,10 +118,24 @@ class MembreController extends AbstractController
 
         if (isset($data['password'])) {
             $hashedPassword = $passwordHasher->hashPassword(
-            $user,
-            $data['password']
-        );
+                $user,
+                $data['password']
+            );
             $user->setPassword($hashedPassword);
+        }
+
+        $errors = $validator->validate($user);
+
+        if (count($errors) > 0) {
+            $messages = [];
+
+            foreach ($errors as $error) {
+                $messages[$error->getPropertyPath()][] = $error->getMessage();
+            }
+
+            return new JsonResponse([
+                'errors' => $messages
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         // Sauvegarde des modifications
