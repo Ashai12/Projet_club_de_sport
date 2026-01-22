@@ -17,7 +17,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class MembreController extends AbstractController
 {
     #[IsGranted('ROLE_USER')]
-    #[Route('/api/membres', methods: ['GET'])]
+    #[Route('/api/membres', methods: ['GET'], name: 'app_membre_index')]
     public function index(MembreRepository $membreRepository): JsonResponse
     {
         $membres = $membreRepository->findAll();
@@ -36,7 +36,7 @@ class MembreController extends AbstractController
     }
 
     #[IsGranted('ROLE_USER')]
-    #[Route('/api/membres/{id}', methods: ['GET'])]
+    #[Route('/api/membres/{id}', methods: ['GET'], name: 'app_membre_show')]
     public function show(Membre $membre): JsonResponse
     {
         $data = [
@@ -50,7 +50,7 @@ class MembreController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
-    #[Route('/api/membres', methods: ['POST'])]
+    #[Route('/api/membres', methods: ['POST'], name: 'app_membre_create')]
     public function create(Request $request, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, ValidatorInterface $validator): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -93,7 +93,7 @@ class MembreController extends AbstractController
     }
 
     #[IsGranted('ROLE_USER')]
-    #[Route('/api/membres/{id}', methods: ['PATCH'])]
+    #[Route('/api/membres/{id}', methods: ['PATCH'], name: 'app_membre_update')]
     public function update(Request $request, Membre $user, EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher, ValidatorInterface $validator): JsonResponse
     {
         $currentUser = $this->getUser();
@@ -148,7 +148,7 @@ class MembreController extends AbstractController
     }
 
     #[IsGranted(['ROLE_ADMIN', 'ROLE_USER'])]
-    #[Route('/api/membres/{id}', methods: ['DELETE'])]
+    #[Route('/api/membres/{id}', methods: ['DELETE'], name: 'app_membre_delete')]
     public function delete(Membre $user, EntityManagerInterface $em): JsonResponse
     {
 
