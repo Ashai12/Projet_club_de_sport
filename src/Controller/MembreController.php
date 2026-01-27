@@ -153,7 +153,7 @@ class MembreController extends AbstractController
     {
 
         $currentUser = $this->getUser();
-        // Vérification si ADMIN si oui on passe au remove flush
+        // Vérification si ADMIN si oui on passe au flush
         if (!in_array('ROLE_ADMIN', $currentUser->getRoles())) {
             // Vérification si c'est son propre profil
             if (!$currentUser || !($currentUser instanceof Membre) || $user->getId() !== $currentUser->getId()) {
