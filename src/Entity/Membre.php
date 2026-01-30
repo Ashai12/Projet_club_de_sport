@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\MembreRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -22,7 +24,7 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
-    #[Assert\NotBlank(message: 'le champ {{ label }} doit etre rempli.')]
+    #[Assert\NotBlank(message: 'le champ doit etre rempli.')]
     #[Assert\Length(
         min: 2,
         max: 60,
@@ -37,7 +39,7 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $name = null;
 
     #[ORM\Column(length: 100)]
-    #[Assert\NotBlank(message: 'le champ {{ label }} doit etre rempli')]
+    #[Assert\NotBlank(message: 'le champ doit etre rempli')]
     #[Assert\Length(
         min: 2,
         max: 60,
@@ -52,7 +54,7 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $lastName = null;
 
     #[ORM\Column(length: 255, unique: true)]
-    #[Assert\NotBlank(message: 'le champ {{ label }} doit etre rempli')]
+    #[Assert\NotBlank(message: 'le champ doit etre rempli')]
     #[Assert\Email(
         message: "L'email {{ value }} n'est pas un email valide.",
         normalizer: 'trim'
@@ -60,17 +62,6 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\NoSuspiciousCharacters]
     private ?string $email = null;
 
-    #[ORM\Column(length: 255)]
-    #[Assert\NotBlank(message: 'le champ {{ label }} doit etre rempli')]
-    #[Assert\PasswordStrength(
-        minScore: 3,
-        message: 'le mot de passe est trop faible'
-    )]
-    #[Assert\NoSuspiciousCharacters]
-    #[Assert\NotCompromisedPassword(
-        message: "Ce mot de passe a été divulgué, s'il vous plait choisissez en un autre.",
-        skipOnError: true
-    )]
     private ?string $password = null;
 
     #[Assert\NotBlank]
@@ -85,6 +76,17 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(type: 'json')]
     private array $roles = [];
+
+    /**
+     * @var Collection<int, Participation>
+     */
+    #[ORM\OneToMany(targetEntity: Participation::class, mappedBy: 'member')]
+    private Collection $participations;
+
+    public function __construct()
+    {
+        $this->participations = new ArrayCollection();
+    }
 
 
     public function getId(): ?int
@@ -174,4 +176,34 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
 
 
     public function eraseCredentials(): void {}
+
+    /**
+     * @return Collection<int, Participation>
+     */
+    public function getParticipations(): Collection
+    {
+        return $this->participations;
+    }
+
+    public function addParticipation(Participation $participation): static
+    {
+        if (!$this->participations->contains($participation)) {
+            $this->participations->add($participation);
+            $participation->setMember($this);
+        }
+
+        return $this;
+    }
+
+    public function removeParticipation(Participation $participation): static
+    {
+        if ($this->participations->removeElement($participation)) {
+            // set the owning side to null (unless already changed)
+            if ($participation->getMember() === $this) {
+                $participation->setMember(null);
+            }
+        }
+
+        return $this;
+    }
 }
