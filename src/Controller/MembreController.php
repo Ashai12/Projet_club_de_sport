@@ -22,7 +22,7 @@ class MembreController extends AbstractController
     {
         $membres = $membreRepository->findAll();
 
-        $data = array_map( function (Membre $membre) {
+        $data = array_map(function (Membre $membre) {
             return [
                 'id' => $membre->getId(),
                 'firstName' => $membre->getName(),
@@ -40,13 +40,13 @@ class MembreController extends AbstractController
     public function show(Membre $membre): JsonResponse
     {
         $data = [
-                'id' => $membre->getId(),
-                'firstName' => $membre->getName(),
-                'lastName' => $membre->getLastName(),
-                'email' => $membre->getUserIdentifier(),
-                'roles' => $membre->getRoles(),
-            ];
-            return new JsonResponse($data, JsonResponse::HTTP_OK);
+            'id' => $membre->getId(),
+            'firstName' => $membre->getName(),
+            'lastName' => $membre->getLastName(),
+            'email' => $membre->getUserIdentifier(),
+            'roles' => $membre->getRoles(),
+        ];
+        return new JsonResponse($data, JsonResponse::HTTP_OK);
     }
 
     #[IsGranted('ROLE_ADMIN')]
@@ -107,58 +107,59 @@ class MembreController extends AbstractController
 
         $data = json_decode($request->getContent(), true);
 
+        // Mise à jour des champs
         if (isset($data['firstName'])) {
             $user->setName($data['firstName']);
         }
-
         if (isset($data['lastName'])) {
             $user->setLastName($data['lastName']);
         }
-
         if (isset($data['email'])) {
             $user->setEmail($data['email']);
         }
-
         if (isset($data['password'])) {
-            $hashedPassword = $passwordHasher->hashPassword(
-                $user,
-                $data['password']
-            );
+            $user->setPlainPassword($data['password']);
+            $hashedPassword = $passwordHasher->hashPassword($user, $data['password']);
             $user->setPassword($hashedPassword);
         }
 
-        $errors = $validator->validate($user);
 
+        // Choix des groupes de validation
+        $groups = ['profile_update'];
+        if (isset($data['password'])) {
+            $groups[] = 'password_update';
+        }
+
+        // Validation
+        $errors = $validator->validate($user, null, $groups);
         if (count($errors) > 0) {
             $messages = [];
-
             foreach ($errors as $error) {
                 $messages[$error->getPropertyPath()][] = $error->getMessage();
             }
-
-            return new JsonResponse([
-                'errors' => $messages
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            return new JsonResponse(['errors' => $messages], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        // Sauvegarde des modifications
+        // Sauvegarde
         $em->flush();
 
         return new JsonResponse(['status' => 'Utilisateur modifié'], JsonResponse::HTTP_OK);
     }
 
-    #[IsGranted(['ROLE_ADMIN', 'ROLE_USER'])]
+
     #[Route('/api/membres/{id}', methods: ['DELETE'], name: 'app_membre_delete')]
     public function delete(Membre $user, EntityManagerInterface $em): JsonResponse
     {
-
         $currentUser = $this->getUser();
-        // Vérification si ADMIN si oui on passe au flush
-        if (!in_array('ROLE_ADMIN', $currentUser->getRoles())) {
-            // Vérification si c'est son propre profil
-            if (!$currentUser || !($currentUser instanceof Membre) || $user->getId() !== $currentUser->getId()) {
-                throw $this->createAccessDeniedException('Tu ne peux pas supprimer ce profil');
-            }
+
+        if (!$currentUser || !($currentUser instanceof Membre)) {
+            throw $this->createAccessDeniedException('Utilisateur non authentifié');
+        }
+
+        // ADMIN peut supprimer tout le monde
+        // USER peut seulement supprimer son propre compte
+        if (!in_array('ROLE_ADMIN', $currentUser->getRoles()) && $currentUser->getId() !== $user->getId()) {
+            throw $this->createAccessDeniedException('Tu ne peux pas supprimer ce profil');
         }
 
         $em->remove($user);
@@ -166,4 +167,5 @@ class MembreController extends AbstractController
 
         return new JsonResponse(['status' => 'Utilisateur supprimé'], JsonResponse::HTTP_OK);
     }
+
 }

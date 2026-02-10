@@ -25,7 +25,7 @@ class Participation
     private ?string $status = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $joined_at = null;
+    private ?\DateTimeImmutable $joinedAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'participations')]
     #[ORM\JoinColumn(nullable: false)]
@@ -69,12 +69,12 @@ class Participation
 
     public function getJoinedAt(): ?\DateTimeImmutable
     {
-        return $this->joined_at;
+        return $this->joinedAt;
     }
 
-    public function setJoinedAt(\DateTimeImmutable $joined_at): static
+    public function setJoinedAt(\DateTimeImmutable $joinedAt): static
     {
-        $this->joined_at = $joined_at;
+        $this->joinedAt = $joinedAt;
 
         return $this;
     }

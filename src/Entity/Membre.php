@@ -24,7 +24,10 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
-    #[Assert\NotBlank(message: 'le champ doit etre rempli.')]
+    #[Assert\NotBlank(
+        groups: ['registration', 'password_update'],
+        message: 'le champ doit etre rempli.'
+        )]
     #[Assert\Length(
         min: 2,
         max: 60,
@@ -39,7 +42,10 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $name = null;
 
     #[ORM\Column(length: 100)]
-    #[Assert\NotBlank(message: 'le champ doit etre rempli')]
+    #[Assert\NotBlank(
+        groups: ['registration', 'password_update'],
+        message: 'le champ doit etre rempli'
+        )]
     #[Assert\Length(
         min: 2,
         max: 60,
@@ -56,20 +62,26 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, unique: true)]
     #[Assert\NotBlank(message: 'le champ doit etre rempli')]
     #[Assert\Email(
+        groups: ['registration', 'password_update'],
         message: "L'email {{ value }} n'est pas un email valide.",
         normalizer: 'trim'
     )]
     #[Assert\NoSuspiciousCharacters]
     private ?string $email = null;
 
+    #[ORM\Column(length: 255)]
     private ?string $password = null;
 
-    #[Assert\NotBlank]
+    #[Assert\NotBlank(
+        groups: ['registration', 'password_update'],
+        message: 'le champ doit etre rempli'
+    )]
     #[Assert\PasswordStrength(
-        minScore: 3,
-        message: 'Le mot de passe est trop faible'
+        groups: ['registration', 'password_update'],
+        message: 'Le mot de passe est trop faible !'
     )]
     #[Assert\NotCompromisedPassword(
+        groups: ['registration', 'password_update'],
         message: "Ce mot de passe a été divulgué."
     )]
     private ?string $plainPassword = null;
