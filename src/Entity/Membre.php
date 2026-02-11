@@ -98,7 +98,7 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, Group>
      */
-    #[ORM\OneToMany(targetEntity: Group::class, mappedBy: 'members')]
+    #[ORM\ManyToMany(targetEntity: Group::class, mappedBy: 'members')]
     private Collection $groupClub;
 
     public function __construct()
@@ -238,7 +238,7 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if (!$this->groupClub->contains($groupClub)) {
             $this->groupClub->add($groupClub);
-            $groupClub->setMembers($this);
+            $groupClub->addMember($this);
         }
 
         return $this;
@@ -247,10 +247,7 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
     public function removeGroupClub(Group $groupClub): static
     {
         if ($this->groupClub->removeElement($groupClub)) {
-            // set the owning side to null (unless already changed)
-            if ($groupClub->getMembers() === $this) {
-                $groupClub->setMembers(null);
-            }
+            $groupClub->removeMember($this);
         }
 
         return $this;

@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\GroupRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: GroupRepository::class)]
@@ -17,9 +19,16 @@ class Group
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[ORM\ManyToOne(inversedBy: 'groupClub')]
-    #[ORM\JoinColumn(nullable: true)]
-    private ?Membre $members = null;
+    /**
+     * @var Collection<int, Membre>
+     */
+    #[ORM\ManyToMany(targetEntity: Membre::class, inversedBy: 'groupClub')]
+    private Collection $members;
+
+    public function __construct()
+    {
+        $this->members = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -38,14 +47,26 @@ class Group
         return $this;
     }
 
-    public function getMembers(): ?Membre
+    /**
+     * @return Collection<int, Membre>
+     */
+    public function getMembers(): Collection
     {
         return $this->members;
     }
 
-    public function setMembers(?Membre $members): static
+    public function addMember(Membre $member): static
     {
-        $this->members = $members;
+        if (!$this->members->contains($member)) {
+            $this->members->add($member);
+        }
+
+        return $this;
+    }
+
+    public function removeMember(Membre $member): static
+    {
+        $this->members->removeElement($member);
 
         return $this;
     }
