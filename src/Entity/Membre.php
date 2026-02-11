@@ -95,9 +95,16 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Participation::class, mappedBy: 'member')]
     private Collection $participations;
 
+    /**
+     * @var Collection<int, Group>
+     */
+    #[ORM\OneToMany(targetEntity: Group::class, mappedBy: 'members')]
+    private Collection $groupClub;
+
     public function __construct()
     {
         $this->participations = new ArrayCollection();
+        $this->groupClub = new ArrayCollection();
     }
 
 
@@ -213,6 +220,36 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($participation->getMember() === $this) {
                 $participation->setMember(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Group>
+     */
+    public function getGroupClub(): Collection
+    {
+        return $this->groupClub;
+    }
+
+    public function addGroupClub(Group $groupClub): static
+    {
+        if (!$this->groupClub->contains($groupClub)) {
+            $this->groupClub->add($groupClub);
+            $groupClub->setMembers($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGroupClub(Group $groupClub): static
+    {
+        if ($this->groupClub->removeElement($groupClub)) {
+            // set the owning side to null (unless already changed)
+            if ($groupClub->getMembers() === $this) {
+                $groupClub->setMembers(null);
             }
         }
 
