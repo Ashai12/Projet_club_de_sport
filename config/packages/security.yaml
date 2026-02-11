@@ -30,6 +30,9 @@ security:
             stateless: true
             provider: app_user_provider
             jwt: ~
+            logout:
+                path: app_logout
+
 
     # Note: Only the *first* matching rule is applied
     access_control:
