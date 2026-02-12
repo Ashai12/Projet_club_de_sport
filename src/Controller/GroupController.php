@@ -112,7 +112,7 @@ class GroupController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
-    #[Route('/api/groupes/{id}', methods: ['POST'], name: 'app_group_create')]
+    #[Route('/api/groupes/{id}', methods: ['POST'], name: 'app_group_addMember')]
     public function addMember(
         Group $group,
         Request $request,
@@ -139,4 +139,16 @@ class GroupController extends AbstractController
         return new JsonResponse(['status' => 'Membre ajouté'], JsonResponse::HTTP_OK);
     }
 
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('api/groupes/{id}', methods: ['DELETE'], name: 'app_groupe_delete')]
+    public function delete(
+        Group $group,
+        EntityManagerInterface $em
+    ): JsonResponse
+    {
+        $em->remove($group);
+        $em->flush();
+
+        return new JsonResponse(['status' => 'Groupe supprimé'], JsonResponse::HTTP_OK);
+    }
 }
