@@ -49,10 +49,18 @@ class GroupController extends AbstractController
     #[Route('/api/groupes/{id}', methods: ['GET'], name: 'app_group_show')]
     public function show(Group $group): JsonResponse
     {
+        $members = array_map(function ($member) {
+            return [
+                'id' => $member->getId(),
+                'name' => $member->getName(),
+                'email' => $member->getEmail(),
+            ];
+        }, $group->getMembers()->toArray());
+
         $data = [
             'id' => $group->getId(),
             'name' => $group->getName(),
-            'members' => $group->getMembers(),
+            'members' => $members,
         ];
         return new JsonResponse($data, JsonResponse::HTTP_OK);
     }
@@ -101,6 +109,34 @@ class GroupController extends AbstractController
         $em->flush();
 
         return new JsonResponse(['status' => 'Groupe créé'], JsonResponse::HTTP_CREATED);
+    }
+
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/api/groupes/{id}', methods: ['POST'], name: 'app_group_create')]
+    public function addMember(
+        Group $group,
+        Request $request,
+        EntityManagerInterface $em,
+        MembreRepository $membreRepository
+        ): JsonResponse
+    {
+        $data =  json_decode($request->getContent(), true);
+        $member = $membreRepository->find($data['membersId']);
+
+        if(!$member) {
+            return new JsonResponse(['error' => 'Membre introuvable'], JsonResponse::HTTP_NOT_FOUND);
+        }
+
+        if ($group->getMembers()->contains($member)) {
+            return new JsonResponse([
+                'error' => 'Ce membre est déjà dans le groupe.'
+            ], 400);
+        }
+
+        $group->addMember($member);
+        $em->flush();
+
+        return new JsonResponse(['status' => 'Membre ajouté'], JsonResponse::HTTP_OK);
     }
 
 }
