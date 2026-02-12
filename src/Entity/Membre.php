@@ -142,7 +142,10 @@ class Membre implements UserInterface, PasswordAuthenticatedUserInterface
         return (string) $this->email;
     }
 
-
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
     public function setEmail(string $email): static
     {
         $this->email = $email;
