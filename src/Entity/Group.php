@@ -6,6 +6,7 @@ use App\Repository\GroupRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: GroupRepository::class)]
 #[ORM\Table(name: '`group`')]
@@ -17,6 +18,17 @@ class Group
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(
+        groups: ['registration', 'password_update'],
+        message: 'le champ doit etre rempli.'
+        )]
+    #[Assert\Length(
+        min: 2,
+        max: 255,
+        minMessage: 'Au minimum {{ min }} lettres sont attendus.',
+        maxMessage: 'Au maximum {{ max }} lettres sont attendus.',
+    )]
+    #[Assert\NoSuspiciousCharacters]
     private ?string $name = null;
 
     /**

@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Validator\Constraints\Json;
 use Symfony\Component\Validator\Constraints\Valid;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -76,6 +77,13 @@ class GroupController extends AbstractController
     {
         $data =  json_decode($request->getContent(), true);
 
+        if (!$data || !isset($data['groupName'], $data['membersId'])) {
+            return new JsonResponse([
+                'error' => 'Données invalides'
+            ], 400);
+        }
+
+
         $group = new Group;
         $group->setName($data['groupName']);
 
@@ -137,6 +145,39 @@ class GroupController extends AbstractController
         $em->flush();
 
         return new JsonResponse(['status' => 'Membre ajouté'], JsonResponse::HTTP_OK);
+    }
+
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/api/groupes/{id}', methods: ['PATCH'], name: 'app_group_updateGroupName')]
+    public function updateGroupName(
+        Request $request,
+        Group $group,
+        EntityManagerInterface $em,
+        ValidatorInterface $validator
+    ): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!$data || !isset($data['groupName'])) {
+            return new JsonResponse([
+                'error' => 'Données invalides'
+            ], 400);
+        }
+
+        $group->setName($data['groupName']);
+
+        $errors = $validator->validate($group);
+        if (count($errors) > 0) {
+            $messages = [];
+            foreach ($errors as $error) {
+                $messages[$error->getPropertyPath()][] = $error->getMessage();
+            }
+            return new JsonResponse(['errors' => $messages], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $em->flush();
+
+        return new JsonResponse(['status' => 'Nom du groupe modifié'], JsonResponse::HTTP_OK);
     }
 
     #[IsGranted('ROLE_ADMIN')]
