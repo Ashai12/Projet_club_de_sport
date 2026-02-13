@@ -120,25 +120,24 @@ class GroupController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
-    #[Route('/api/groupes/{id}', methods: ['POST'], name: 'app_group_addMember')]
+    #[Route('/api/groupes/{groupeId}/members/{membreId}', methods: ['POST'], name: 'app_group_addMember')]
     public function addMember(
-        Group $group,
-        Request $request,
+        int $groupeId,
+        int $membreId,
+        GroupRepository $groupRepository,
         EntityManagerInterface $em,
         MembreRepository $membreRepository
         ): JsonResponse
     {
-        $data =  json_decode($request->getContent(), true);
-        $member = $membreRepository->find($data['membersId']);
+        $group = $groupRepository->find($groupeId);
+        $member = $membreRepository->find($membreId);
 
-        if(!$member) {
-            return new JsonResponse(['error' => 'Membre introuvable'], JsonResponse::HTTP_NOT_FOUND);
+        if (!$group) {
+            return new JsonResponse(['error' => 'Groupe introuvable'], 404);
         }
 
-        if ($group->getMembers()->contains($member)) {
-            return new JsonResponse([
-                'error' => 'Ce membre est déjà dans le groupe.'
-            ], 400);
+        if (!$member) {
+            return new JsonResponse(['error' => 'Membre introuvable'], 404);
         }
 
         $group->addMember($member);
