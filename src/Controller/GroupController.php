@@ -148,6 +148,41 @@ class GroupController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
+    #[Route(
+        '/api/groupes/{groupeId}/membres/{membreId}',
+        methods: ['DELETE'],
+        name: 'app_group_remove_member'
+    )]
+    public function removeMember(
+        int $groupeId,
+        int $membreId,
+        MembreRepository $membreRepository,
+        GroupRepository $groupRepository,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $group = $groupRepository->find($groupeId);
+        $member = $membreRepository->find($membreId);
+
+        if (!$group) {
+            return new JsonResponse(['error' => 'Groupe introuvable'], 404);
+        }
+
+        if (!$member) {
+            return new JsonResponse(['error' => 'Membre introuvable'], 404);
+        }
+
+        if (!$group->getMembers()->contains($member)) {
+            return new JsonResponse(['error' => 'Ce membre ne fait pas partie du groupe'], 400);
+        }
+
+        $group->removeMember($member);
+        $em->flush();
+
+        return new JsonResponse(['status' => 'Membre retiré du groupe'], 200);
+    }
+
+
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/api/groupes/{id}', methods: ['PATCH'], name: 'app_group_updateGroupName')]
     public function updateGroupName(
         Request $request,
