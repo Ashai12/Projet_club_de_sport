@@ -25,8 +25,8 @@ class MembreController extends AbstractController
         $data = array_map(function (Membre $membre) {
             return [
                 'id' => $membre->getId(),
-                'firstName' => $membre->getName(),
-                'lastName' => $membre->getLastName(),
+                'prénom' => $membre->getName(),
+                'nom' => $membre->getLastName(),
                 'email' => $membre->getUserIdentifier(),
                 'roles' => $membre->getRoles(),
             ];
@@ -41,8 +41,8 @@ class MembreController extends AbstractController
     {
         $data = [
             'id' => $membre->getId(),
-            'firstName' => $membre->getName(),
-            'lastName' => $membre->getLastName(),
+            'prénom' => $membre->getName(),
+            'nom' => $membre->getLastName(),
             'email' => $membre->getUserIdentifier(),
             'roles' => $membre->getRoles(),
         ];
