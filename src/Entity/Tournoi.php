@@ -24,13 +24,12 @@ class Tournoi
         'today',
         message: "La date du tournoi doit être aujourd'hui ou dans le futur."
     )]
-    #[Assert\NoSuspiciousCharacters]
     private ?\DateTimeImmutable $date = null;
 
     #[ORM\Column(length: 100)]
     #[Assert\Choice(
         choices: Tournoi::CATEGORIES,
-        message: 'Choisissez un niveau valide.',
+        message: 'Choisissez un niveau valide. "Poussins, Pupille, Benjamins, Minimes, Cadets, Juniors, Seniors, Vétérans"',
     )]
     #[Assert\NotBlank]
     #[Assert\NoSuspiciousCharacters]
@@ -48,7 +47,7 @@ class Tournoi
     #[ORM\Column(length: 30)]
     #[Assert\Choice(
         choices: ['À venir', 'En cours', 'Terminé'],
-        message: 'Choisissez un status valide.',
+        message: 'Choisissez un status valide. "À venir" - "En cours" - "Terminé"',
     )]
     #[Assert\NotBlank]
     #[Assert\NoSuspiciousCharacters]
