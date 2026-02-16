@@ -31,4 +31,20 @@ class TournoiController extends AbstractController
 
         return new JsonResponse($data, JsonResponse::HTTP_OK);
     }
+
+    #[IsGranted('ROLE_USER')]
+    #[Route('/api/tournois/{id}', methods:'GET', name:'app_tournoi_show')]
+    public function show(Tournoi $tournoi): JsonResponse
+    {
+        $data = [
+            'id' => $tournoi->getId(),
+            'date' => $tournoi->getDate(),
+            'niveau' => $tournoi->getLevel(),
+            'adresse' => $tournoi->getAddress(),
+            'status' => $tournoi->getStatus(),
+            'participations' => $tournoi->getParticipations(),
+            'Nom du tournois' => $tournoi->getTournamentName()
+        ];
+        return new JsonResponse($data, JsonResponse::HTTP_OK);
+    }
 }
