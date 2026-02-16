@@ -32,15 +32,15 @@ class GroupController extends AbstractController
          $members = array_map(function ($member) {
             return [
                 'id' => $member->getId(),
-                'name' => $member->getName(),
+                'prénom' => $member->getName(),
                 'email' => $member->getEmail(),
             ];
         }, $group->getMembers()->toArray());
 
             return [
                 'id' => $group->getId(),
-                'name' => $group->getName(),
-                'members' => $members,
+                'nom du groupe' => $group->getName(),
+                'membres' => $members,
             ];
         }, $groups);
         return new JsonResponse($data, JsonResponse::HTTP_OK);
@@ -53,15 +53,15 @@ class GroupController extends AbstractController
         $members = array_map(function ($member) {
             return [
                 'id' => $member->getId(),
-                'name' => $member->getName(),
+                'prénom' => $member->getName(),
                 'email' => $member->getEmail(),
             ];
         }, $group->getMembers()->toArray());
 
         $data = [
             'id' => $group->getId(),
-            'name' => $group->getName(),
-            'members' => $members,
+            'nom du groupe' => $group->getName(),
+            'membres' => $members,
         ];
         return new JsonResponse($data, JsonResponse::HTTP_OK);
     }
