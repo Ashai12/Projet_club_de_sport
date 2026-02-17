@@ -244,4 +244,21 @@ public function index(TournoiRepository $tournoiRepository): JsonResponse
 
         return new JsonResponse(["status" => "le tournois est terminé"], JsonResponse::HTTP_OK);
     }
+
+    #[isGranted('ROLE_ADMIN')]
+    #[Route(
+        '/api/tournois/{id}',
+        methods: 'DELETE',
+        name: 'app_tournois_delete'
+    )]
+    public function delete(
+        Tournoi $tournoi,
+        EntityManagerInterface $em
+    ): JsonResponse
+    {
+        $em->remove($tournoi);
+        $em->flush();
+
+        return new JsonResponse(['status' => 'Tournoi supprimé'], JsonResponse::HTTP_OK);
+    }
 }
