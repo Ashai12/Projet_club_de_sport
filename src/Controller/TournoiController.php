@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Tournoi;
+use App\Entity\Participation;
+use App\Repository\MembreRepository;
 use App\Repository\TournoiRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -15,25 +17,39 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class TournoiController extends AbstractController
 {
     #[IsGranted('ROLE_USER')]
-    #[Route('/api/tournois', methods: 'GET', name: 'app_tournoi_index')]
-    public function index(TournoiRepository $tournoiRepository): JsonResponse
-    {
-        $tournois = $tournoiRepository->findAll();
+#[Route('/api/tournois', methods: ['GET'], name: 'app_tournoi_index')]
+public function index(TournoiRepository $tournoiRepository): JsonResponse
+{
+    $tournois = $tournoiRepository->findAll();
 
-        $data = array_map(function (Tournoi $tournoi) {
+    $data = array_map(function (Tournoi $tournoi) {
+
+        $participations = array_map(function ($participation) {
             return [
-                'id' => $tournoi->getId(),
-                'date' => $tournoi->getDate(),
-                'niveau' => $tournoi->getLevel(),
-                'adresse' => $tournoi->getAddress(),
-                'status' => $tournoi->getStatus(),
-                'participations' => $tournoi->getParticipations(),
-                'Nom du tournois' => $tournoi->getTournamentName()
+                'id' => $participation->getId(),
+                'status' => $participation->getStatus(),
+                'joinedAt' => $participation->getJoinedAt()?->format('Y-m-d H:i:s'),
+                'membre' => [
+                    'id' => $participation->getMember()->getId(),
+                    'nom' => $participation->getMember()->getFullName(),
+                    'email' => $participation->getMember()->getEmail(),
+                ]
             ];
-        }, $tournois);
+        }, $tournoi->getParticipations()->toArray());
 
-        return new JsonResponse($data, JsonResponse::HTTP_OK);
-    }
+        return [
+            'id' => $tournoi->getId(),
+            'date' => $tournoi->getDate()?->format('Y-m-d'),
+            'niveau' => $tournoi->getLevel(),
+            'adresse' => $tournoi->getAddress(),
+            'status' => $tournoi->getStatus(),
+            'nom du tournoi' => $tournoi->getTournamentName(),
+            'participations' => $participations
+        ];
+    }, $tournois);
+
+    return new JsonResponse($data, JsonResponse::HTTP_OK);
+}
 
     #[IsGranted('ROLE_USER')]
     #[Route('/api/tournois/{id}', methods: 'GET', name: 'app_tournoi_show')]
@@ -87,5 +103,50 @@ class TournoiController extends AbstractController
         $em->flush();
 
         return new JsonResponse(['status' => 'Tournoi créé'], JsonResponse::HTTP_CREATED);
+    }
+
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route(
+        '/api/tournois/{tournoiId}/membres/{membreId}',
+        methods: 'POST',
+        name: 'app_tournoi_addMember'
+    )]
+    public function addMember(
+        int $tournoiId,
+        int $membreId,
+        TournoiRepository $tournoiRepository,
+        MembreRepository $membreRepository,
+        EntityManagerInterface $em
+    ): JsonResponse
+    {
+        $tournoi = $tournoiRepository->find($tournoiId);
+        $membre = $membreRepository->find($membreId);
+
+        if (!$tournoi) {
+            return new JsonResponse(['error' => 'Groupe introuvable'], 404);
+        }
+
+        if (!$membre) {
+            return new JsonResponse(['error' => 'Membre introuvable'], 404);
+        }
+
+        foreach ($tournoi->getParticipations() as $participation) {
+            if ($participation->getMember()->getId() === $membre->getId()) {
+                return new JsonResponse([
+                    'error' => 'Ce membre est déjà inscrit à ce tournoi'
+                ], 400);
+            }
+        }
+
+        $participation = new Participation();
+        $participation->setMember($membre);
+        $participation->setTournament($tournoi);
+        $participation->setStatus('Inscrit');
+        $participation->setJoinedAt();
+
+        $em->persist($participation);
+        $em->flush();
+
+        return new JsonResponse(['status' => 'Membre inscrit'], JsonResponse::HTTP_OK);
     }
 }

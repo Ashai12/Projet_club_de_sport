@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\ParticipationRepository;
+use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -72,9 +73,9 @@ class Participation
         return $this->joinedAt;
     }
 
-    public function setJoinedAt(\DateTimeImmutable $joinedAt): static
+    public function setJoinedAt(): static
     {
-        $this->joinedAt = $joinedAt;
+        $this->joinedAt = new DateTimeImmutable();
 
         return $this;
     }
