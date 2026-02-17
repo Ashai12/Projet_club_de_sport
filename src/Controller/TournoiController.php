@@ -98,7 +98,7 @@ public function index(TournoiRepository $tournoiRepository): JsonResponse
         $tournoi->setLevel($data['level']);
         $date = new \DateTimeImmutable($data['date']);
         $tournoi->setDate($date);
-        $tournoi->setStatus($data['status']);
+        $tournoi->setStatus('À venir');
 
         $errors = $validator->validate($tournoi);
 
