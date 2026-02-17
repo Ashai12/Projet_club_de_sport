@@ -52,20 +52,35 @@ public function index(TournoiRepository $tournoiRepository): JsonResponse
 }
 
     #[IsGranted('ROLE_USER')]
-    #[Route('/api/tournois/{id}', methods: 'GET', name: 'app_tournoi_show')]
+    #[Route('/api/tournois/{id}', methods: ['GET'], name: 'app_tournoi_show')]
     public function show(Tournoi $tournoi): JsonResponse
     {
+        $participations = array_map(function ($participation) {
+            return [
+                'id' => $participation->getId(),
+                'status' => $participation->getStatus(),
+                'joinedAt' => $participation->getJoinedAt()?->format('Y-m-d H:i:s'),
+                'membre' => [
+                    'id' => $participation->getMember()->getId(),
+                    'nom' => $participation->getMember()->getFullName(),
+                    'email' => $participation->getMember()->getEmail(),
+                ]
+            ];
+        }, $tournoi->getParticipations()->toArray());
+
         $data = [
             'id' => $tournoi->getId(),
-            'date' => $tournoi->getDate(),
+            'date' => $tournoi->getDate()?->format('Y-m-d'),
             'niveau' => $tournoi->getLevel(),
             'adresse' => $tournoi->getAddress(),
             'status' => $tournoi->getStatus(),
-            'participations' => $tournoi->getParticipations(),
-            'Nom du tournois' => $tournoi->getTournamentName()
+            'nom' => $tournoi->getTournamentName(),
+            'participations' => $participations
         ];
+
         return new JsonResponse($data, JsonResponse::HTTP_OK);
     }
+
 
     #[IsGranted('ROLE_ADMIN')]
     #[Route('/api/tournois', methods: 'POST', name: 'app_tournois_create')]
