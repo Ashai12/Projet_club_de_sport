@@ -164,4 +164,53 @@ public function index(TournoiRepository $tournoiRepository): JsonResponse
 
         return new JsonResponse(['status' => 'Membre inscrit'], JsonResponse::HTTP_OK);
     }
+
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route(
+        '/api/tournois/{tournoiId}/membres/{membreId}',
+        methods: ['DELETE'],
+        name: 'app_tournoi_removeMember'
+    )]
+    public function removeMember(
+        int $tournoiId,
+        int $membreId,
+        TournoiRepository $tournoiRepository,
+        MembreRepository $membreRepository,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $tournoi = $tournoiRepository->find($tournoiId);
+        $membre = $membreRepository->find($membreId);
+
+        if (!$tournoi) {
+            return new JsonResponse(['error' => 'Tournoi introuvable'], 404);
+        }
+
+        if (!$membre) {
+            return new JsonResponse(['error' => 'Membre introuvable'], 404);
+        }
+
+        $participationToRemove = null;
+
+        foreach ($tournoi->getParticipations() as $participation) {
+            if ($participation->getMember()->getId() === $membre->getId()) {
+                $participationToRemove = $participation;
+                break;
+            }
+        }
+
+        if (!$participationToRemove) {
+            return new JsonResponse([
+                'error' => 'Membre non inscrit au tournoi'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $tournoi->removeParticipation($participationToRemove);
+        $em->remove($participationToRemove);
+        $em->flush();
+
+        return new JsonResponse([
+            'status' => 'Membre retiré du tournoi'
+        ], JsonResponse::HTTP_OK);
+    }
+
 }
