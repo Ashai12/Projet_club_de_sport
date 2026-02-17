@@ -120,7 +120,7 @@ class GroupController extends AbstractController
     }
 
     #[IsGranted('ROLE_ADMIN')]
-    #[Route('/api/groupes/{groupeId}/members/{membreId}', methods: ['POST'], name: 'app_group_addMember')]
+    #[Route('/api/groupes/{groupeId}/membres/{membreId}', methods: ['POST'], name: 'app_group_addMember')]
     public function addMember(
         int $groupeId,
         int $membreId,
@@ -138,6 +138,12 @@ class GroupController extends AbstractController
 
         if (!$member) {
             return new JsonResponse(['error' => 'Membre introuvable'], 404);
+        }
+
+        if ($group->getMembers()->contains($member)) {
+            return new JsonResponse([
+                'error' => 'Ce membre fait déjà partie du groupe'
+            ], 400);
         }
 
         $group->addMember($member);
