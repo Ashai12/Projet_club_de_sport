@@ -213,4 +213,35 @@ public function index(TournoiRepository $tournoiRepository): JsonResponse
         ], JsonResponse::HTTP_OK);
     }
 
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route(
+        '/api/tournois/{id}/finish',
+        methods: 'PATCH',
+        name: 'app_tournoi_finish'
+    )]
+    public function finish(
+        int $id,
+        TournoiRepository $tournoiRepository,
+        EntityManagerInterface $em
+    ): JsonResponse
+    {
+        $tournoi = $tournoiRepository->find($id);
+
+        if (!$tournoi) {
+            return new JsonResponse([
+                'error' => 'Tournoi introuvable'
+            ], 404);
+        }
+
+        if ($tournoi->getStatus() === "Terminé") {
+            return new JsonResponse([
+                "error" => "le tournoi est déjà terminé"
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $tournoi->setStatus('Terminé');
+        $em->flush();
+
+        return new JsonResponse(["status" => "le tournois est terminé"], JsonResponse::HTTP_OK);
+    }
 }
