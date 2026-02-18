@@ -77,13 +77,6 @@ class GroupController extends AbstractController
     {
         $data =  json_decode($request->getContent(), true);
 
-        if (!$data || !isset($data['groupName'], $data['membersId'])) {
-            return new JsonResponse([
-                'error' => 'Données invalides'
-            ], 400);
-        }
-
-
         $group = new Group;
         $group->setName($data['groupName']);
 
