@@ -32,7 +32,7 @@ class GroupController extends AbstractController
          $members = array_map(function ($member) {
             return [
                 'id' => $member->getId(),
-                'prénom' => $member->getName(),
+                'membre' => $member->getFullName(),
                 'email' => $member->getEmail(),
             ];
         }, $group->getMembers()->toArray());
@@ -53,7 +53,7 @@ class GroupController extends AbstractController
         $members = array_map(function ($member) {
             return [
                 'id' => $member->getId(),
-                'prénom' => $member->getName(),
+                'membre' => $member->getFullName(),
                 'email' => $member->getEmail(),
             ];
         }, $group->getMembers()->toArray());
